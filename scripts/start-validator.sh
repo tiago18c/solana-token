@@ -8,6 +8,7 @@ ARGS=(
   -r
   -q
   --bpf-program TACLkU6CiCdkQN2MjoyDkVg2yAH9zkxiHDsiztQ52TP $test_fixtures/token_acl.so
+  --bpf-program GATEzzqxhJnsWF6vHRsgtixxSB8PaQdcqGEVTEHWiULz $test_fixtures/allow_block_list.so
 )
 PORT=8899
 PID=$(lsof -t -i:$PORT)

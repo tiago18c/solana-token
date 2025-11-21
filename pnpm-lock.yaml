@@ -17,9 +17,12 @@ importers:
       '@solana/kit':
         specifier: ^5.0.0
         version: 5.0.0(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.3)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@5.0.10))
+      '@token-acl/abl-sdk':
+        specifier: ^0.2.0
+        version: 0.2.0(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.3)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@5.0.10))
       '@token-acl/sdk':
-        specifier: ^0.2.3
-        version: 0.2.3(@solana/sysvars@5.0.0(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.3))(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.3)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@5.0.10))
+        specifier: ^0.2.6
+        version: 0.2.6(@solana/sysvars@5.0.0(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.3))(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.3)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@5.0.10))
     devDependencies:
       '@ava/typescript':
         specifier: ^6.0.0
@@ -957,8 +960,11 @@ packages:
     peerDependencies:
       typescript: '>=5.3.3'
 
-  '@token-acl/sdk@0.2.3':
-    resolution: {integrity: sha512-VF7HCIxG5bkgv/70RbUu/eVjIl07bbYo6WWihNw/liBMzAEIZrMxLP06LMo/+F8d+/qDOs4jERyFFQah3GESXg==}
+  '@token-acl/abl-sdk@0.2.0':
+    resolution: {integrity: sha512-uMBtNkBhRq4mXRQaIN90bluuQoBPfL3NDTYCqiQ8NBqyLShVehLqohqFxG2BUU8zUWwBxrFqBGNn8gElbLIUmg==}
+
+  '@token-acl/sdk@0.2.6':
+    resolution: {integrity: sha512-gKXPnxkYPspVaLISfGzpbQ+H3RzD7UpweaBs3zhCrQDE3MoqPKM/A9PTkTnyS+gtEC2AmV+h29b/E9YHnxpp0Q==}
 
   '@types/babel__core@7.20.5':
     resolution: {integrity: sha512-qoQprZvz5wQFJwMDqeseRXWv3rqMvhgpbXFfVyWhbx9X47POIA6i/+dXefEmZKoAgOaTdaIgNSMqMIU61yRyzA==}
@@ -3973,7 +3979,15 @@ snapshots:
     transitivePeerDependencies:
       - fastestsmallesttextencoderdecoder
 
-  '@token-acl/sdk@0.2.3(@solana/sysvars@5.0.0(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.3))(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.3)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@5.0.10))':
+  '@token-acl/abl-sdk@0.2.0(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.3)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@5.0.10))':
+    dependencies:
+      '@solana/kit': 5.0.0(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.3)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@5.0.10))
+    transitivePeerDependencies:
+      - fastestsmallesttextencoderdecoder
+      - typescript
+      - ws
+
+  '@token-acl/sdk@0.2.6(@solana/sysvars@5.0.0(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.3))(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.3)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@5.0.10))':
     dependencies:
       '@solana-program/token-2022': 0.6.1(@solana/kit@5.0.0(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.3)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@5.0.10)))(@solana/sysvars@5.0.0(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.3))
       '@solana/kit': 5.0.0(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.3)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@5.0.10))

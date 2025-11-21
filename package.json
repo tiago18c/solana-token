@@ -74,7 +74,8 @@
   "dependencies": {
     "@solana/kit": "^5.0.0",
     "@solana-program/token-2022": "0.6.1",
-    "@token-acl/sdk": "^0.2.3",
+    "@token-acl/sdk": "^0.2.6",
+    "@token-acl/abl-sdk": "^0.2.0",
     "@solana-program/token": "0.9.0"
   }
 }

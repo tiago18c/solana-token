@@ -26,11 +26,14 @@ import {
   setTransactionMessageFeePayerSigner,
   setTransactionMessageLifetimeUsingBlockhash,
   signTransactionMessageWithSigners,
+  some,
 } from '@solana/kit';
 import {
+  AccountState,
   Extension,
   ExtensionArgs,
   TOKEN_2022_PROGRAM_ADDRESS,
+  extension,
   getInitializeAccountInstruction,
   getInitializeMintInstruction,
   getMintSize,
@@ -41,6 +44,8 @@ import {
   getTokenSize,
 } from '@solana-program/token-2022';
 import { TOKEN_PROGRAM_ADDRESS } from '@solana-program/token';
+import { findMintConfigPda, findThawExtraMetasAccountPda, getCreateConfigInstruction, getTogglePermissionlessInstructionsInstruction, setTokenAclMetadata, TOKEN_ACL_PROGRAM_ADDRESS } from '@token-acl/sdk';
+import { ABL_PROGRAM_ADDRESS, findListConfigPda, getCreateListInstruction, getSetupExtraMetasInstruction, Mode } from '@token-acl/abl-sdk';
 
 type Client = {
   rpc: Rpc<SolanaRpcApi>;
@@ -247,6 +252,89 @@ export const createMint = async (
       (tx) => signAndSendTransaction(client, tx)
     );
   
+    return mint.address;
+  };
+
+export const createMintAcl = async (
+    client: Client,
+    payer: TransactionSigner,
+    mintAuthority: TransactionSigner,
+    decimals: number = 0
+  ): Promise<Address> => {
+    const mint = await generateKeyPairSigner();
+    const listSeed = await generateKeyPairSigner();
+
+    const additionalMetadata = new Map<string, string>();
+    additionalMetadata.set('token-acl', ABL_PROGRAM_ADDRESS);
+
+    const extensions = [
+      extension('DefaultAccountState', { state: AccountState.Frozen}),
+      extension('MetadataPointer', {
+        authority: some(mintAuthority.address),
+        metadataAddress: some(mint.address),
+      }),
+      extension('TokenMetadata', {
+        updateAuthority: some(mintAuthority.address),
+        mint: mint.address,
+        name: 'My Super Token',
+        symbol: 'MST',
+        uri: 'https://example.com/mst.json',
+        additionalMetadata,
+      })
+    ];
+
+    await createMint2022({ client, payer, authority: mintAuthority, extensions, mint, freezeAuthority: mintAuthority.address });
+
+    const [mintConfig, mintBump] = await findMintConfigPda({ mint: mint.address }, { programAddress: TOKEN_ACL_PROGRAM_ADDRESS });
+
+    const [listConfig, listBump] = await findListConfigPda({authority: mintAuthority.address, seed: listSeed.address }, { programAddress: ABL_PROGRAM_ADDRESS });
+
+    const [extraMetas, extraMetasBump] = await findThawExtraMetasAccountPda({mint: mint.address}, { programAddress: ABL_PROGRAM_ADDRESS });
+
+    console.log('mintConfig', mintConfig);
+    console.log('listConfig', listConfig);
+    console.log('extraMetas', extraMetas);
+
+    const instructions = [
+      getCreateConfigInstruction({
+        payer: payer.address,
+        authority: mintAuthority,
+        gatingProgram: ABL_PROGRAM_ADDRESS,
+        mint: mint.address,
+        mintConfig,
+      }),
+      getCreateListInstruction({
+        authority: mintAuthority,
+        listConfig: listConfig,
+        mode: Mode.AllowAllEoas,
+        seed: listSeed.address,
+      }),
+      getTogglePermissionlessInstructionsInstruction({
+        authority: mintAuthority,
+        mintConfig: mintConfig,
+        freezeEnabled: false,
+        thawEnabled: true,
+      }),
+      getSetupExtraMetasInstruction({
+        authority: mintAuthority,
+        extraMetas,
+        lists: [listConfig],
+        mint: mint.address,
+        tokenAclMintConfig: mintConfig,
+      }),
+      setTokenAclMetadata(
+        mintAuthority,
+        mint.address,
+        ABL_PROGRAM_ADDRESS,
+      )
+    ];
+
+    await pipe(
+      await createDefaultTransaction(client, payer),
+      (tx) => appendTransactionMessageInstructions(instructions, tx),
+      (tx) => signAndSendTransaction(client, tx)
+    );
+
     return mint.address;
   };
 

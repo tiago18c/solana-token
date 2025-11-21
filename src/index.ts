@@ -50,7 +50,7 @@ export async function createAssociatedTokenAccountInstructions(
         return { instructions: [createAtaInstruction], associatedTokenAddress: associatedTokenAddress };
     }
 
-    const thawInstruction = await createThawPermissionlessInstructionFromMint(rpc, mint, mintAddress, owner, associatedTokenAddress, payer.address );
+    const thawInstruction = await createThawPermissionlessInstructionFromMint(rpc, mint, mintAddress, owner, associatedTokenAddress, payer );
 
     return { instructions: [createAtaInstruction, thawInstruction], associatedTokenAddress: associatedTokenAddress };
 }
