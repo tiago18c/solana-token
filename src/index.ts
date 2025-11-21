@@ -1,6 +1,6 @@
 import { ASSOCIATED_TOKEN_PROGRAM_ADDRESS, TOKEN_PROGRAM_ADDRESS } from "@solana-program/token";
-import { findAssociatedTokenPda, getMintDecoder, Mint, TOKEN_2022_PROGRAM_ADDRESS, getCreateAssociatedTokenInstruction } from "@solana-program/token-2022";
-import { Address, appendTransactionMessageInstructions, createNoopSigner, createTransactionMessage, fetchEncodedAccount, getSignatureFromTransaction, Instruction, isSolanaError, pipe, Rpc, RpcSubscriptions, RpcSubscriptionsApi, SendableTransaction, sendAndConfirmTransactionFactory, sendTransactionWithoutConfirmingFactory, setTransactionMessageFeePayer, setTransactionMessageLifetimeUsingBlockhash, signTransactionMessageWithSigners, SOLANA_ERROR__JSON_RPC__SERVER_ERROR_SEND_TRANSACTION_PREFLIGHT_FAILURE, SolanaRpcApi, SolanaRpcSubscriptionsApi, Transaction, TransactionWithBlockhashLifetime } from "@solana/kit";
+import { findAssociatedTokenPda, getMintDecoder, TOKEN_2022_PROGRAM_ADDRESS, getCreateAssociatedTokenInstruction } from "@solana-program/token-2022";
+import { Address, appendTransactionMessageInstructions, createTransactionMessage, fetchEncodedAccount, getSignatureFromTransaction, Instruction, isSolanaError, pipe, Rpc, RpcSubscriptions, SendableTransaction, sendAndConfirmTransactionFactory, sendTransactionWithoutConfirmingFactory, setTransactionMessageFeePayerSigner, setTransactionMessageLifetimeUsingBlockhash, signTransactionMessageWithSigners, SOLANA_ERROR__JSON_RPC__SERVER_ERROR_SEND_TRANSACTION_PREFLIGHT_FAILURE, SolanaRpcApi, SolanaRpcSubscriptionsApi, Transaction, TransactionSigner, TransactionWithBlockhashLifetime } from "@solana/kit";
 import { isTokenAclMintFromMint, createThawPermissionlessInstructionFromMint } from "@token-acl/sdk";
 
 /**
@@ -13,7 +13,7 @@ import { isTokenAclMintFromMint, createThawPermissionlessInstructionFromMint } f
  */
 export async function createAssociatedTokenAccountInstructions(
     rpc: Rpc<SolanaRpcApi>,
-    payer: Address,
+    payer: TransactionSigner,
     owner: Address,
     mintAddress: Address,
 ): Promise<{ instructions: Instruction[], associatedTokenAddress: Address }> {
@@ -24,7 +24,7 @@ export async function createAssociatedTokenAccountInstructions(
     }
     const tokenProgram = mintAccount.programAddress;
     
-    const [associatedTokenAddress, bump] = await findAssociatedTokenPda( {
+    const [associatedTokenAddress, _] = await findAssociatedTokenPda( {
         mint: mintAddress,
         owner: owner,
         tokenProgram: tokenProgram
@@ -34,7 +34,7 @@ export async function createAssociatedTokenAccountInstructions(
         ata: associatedTokenAddress,
         mint: mintAddress,
         owner: owner,
-        payer: createNoopSigner(payer),
+        payer: payer,
         tokenProgram: tokenProgram
     }, { programAddress: ASSOCIATED_TOKEN_PROGRAM_ADDRESS});
 
@@ -44,13 +44,13 @@ export async function createAssociatedTokenAccountInstructions(
 
     const mint = getMintDecoder().decode(mintAccount.data);
 
-    const isTokenAclMint = isTokenAclMintFromMint(mint);
+    const isTokenAclMint = await isTokenAclMintFromMint(mint);
 
     if (!isTokenAclMint) {
         return { instructions: [createAtaInstruction], associatedTokenAddress: associatedTokenAddress };
     }
 
-    const thawInstruction = await createThawPermissionlessInstructionFromMint(rpc, mint, mintAddress, owner, associatedTokenAddress, payer );
+    const thawInstruction = await createThawPermissionlessInstructionFromMint(rpc, mint, mintAddress, owner, associatedTokenAddress, payer.address );
 
     return { instructions: [createAtaInstruction, thawInstruction], associatedTokenAddress: associatedTokenAddress };
 }
@@ -65,7 +65,7 @@ export async function createAssociatedTokenAccountInstructions(
  */
 export async function createAssociatedTokenAccount(
     rpc: Rpc<SolanaRpcApi>,
-    payer: Address,
+    payer: TransactionSigner,
     owner: Address,
     mint: Address,
 ): Promise<{ signature: string, associatedTokenAddress: Address }> {
@@ -75,7 +75,7 @@ export async function createAssociatedTokenAccount(
 
     const transactionMessage = pipe(
         createTransactionMessage({ version: 0}),
-        tx => setTransactionMessageFeePayer(payer, tx),
+        tx => setTransactionMessageFeePayerSigner(payer, tx),
         tx => setTransactionMessageLifetimeUsingBlockhash(latestBlockhash, tx),
         tx => appendTransactionMessageInstructions(instructions, tx)
     );
@@ -108,7 +108,7 @@ export async function createAssociatedTokenAccount(
 export async function createAndConfirmAssociatedTokenAccount(
     rpc: Rpc<SolanaRpcApi>,
     rpcSubscriptions: RpcSubscriptions<SolanaRpcSubscriptionsApi>,
-    payer: Address,
+    payer: TransactionSigner,
     owner: Address,
     mint: Address,
 ): Promise<{ signature: string, associatedTokenAddress: Address }> {
@@ -118,7 +118,7 @@ export async function createAndConfirmAssociatedTokenAccount(
 
     const transactionMessage = pipe(
         createTransactionMessage({ version: 0}),
-        tx => setTransactionMessageFeePayer(payer, tx),
+        tx => setTransactionMessageFeePayerSigner(payer, tx),
         tx => setTransactionMessageLifetimeUsingBlockhash(latestBlockhash, tx),
         tx => appendTransactionMessageInstructions(instructions, tx), 
     );
